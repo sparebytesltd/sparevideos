@@ -1854,7 +1854,7 @@ function sparevideo_ajax_load_videos($all=null){
 						  ?>
 						  <input type="submit" id="remove_video_page" value="Remove Video Page" name="remove_video_page" class="button-primary" style="margin-right:20px; margin-left:10px;"/>		
 						  <?php } else { ?>
-						  <input type="submit" id="set_as_video_page" value="Set as Video Page" name="set_as_video_page" class=" button-primary" style="margin-right:20px; margin-left:10px;"/>		
+						  <input type="submit" id="set_as_video_page" value="Make Video Page" name="set_as_video_page" class=" button-primary" style="margin-right:20px; margin-left:10px;"/>		
 						  <?php } 
 					  }
 					  ?>
