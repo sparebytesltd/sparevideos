@@ -15,7 +15,7 @@ function svidf_custom_media_upload_tab_name( $tabs ) {
 	$options = get_option('sparevideo_options');	
 	$current_user = wp_get_current_user();
 	 
-	if( trim($current_user->roles[0])=='administrator' || @in_array(trim($current_user->roles[0]),$options['who_can_use']))
+	if( current_user_can('administrator') || array_intersect($options['who_can_use'], $current_user->roles))
 	{		     
 		$newtab = array( 'spare_video' => 'Insert Video');	
 	}
@@ -31,7 +31,7 @@ function svidf_olab_tab_iframe() {
 	$options = get_option('sparevideo_options');	
 	$current_user = wp_get_current_user();
 	 
-	if( trim($current_user->roles[0])!='administrator' && !@in_array(trim($current_user->roles[0]),$options['who_can_use']))
+	if( trim($current_user->roles[0])!='administrator' && !array_intersect($options['who_can_use'], $current_user->roles))
 	{		     
 		exit;
 	}
@@ -83,7 +83,8 @@ function svidf_custom_media_upload_tab_content() {
 		$('.media_lib1').click(function(){
 			 var data11 = {
 							 action: 'load_videos',
-                             post_id: <?php echo strip_tags($_GET['post_id']); ?>							
+                             post_id: <?php echo strip_tags($_GET['post_id']); ?>,
+				 			 _wpnonce: '<?php echo wp_create_nonce( 'load_videos_'.$_GET['post_id'] ); ?>'
                             };
 			$('#media_lib').html('<p style="display:table; vertical-align:middle; text-align:center;    min-width: 100%; margin:20% 0px 0px 0px;"><img src="<?php echo admin_url();?>/images/loading.gif" style="width:20px;"></p>');
 		   $.ajax({  
@@ -146,13 +147,17 @@ function svidf_custom_media_upload_tab_content() {
 	WHERE wp_sparevideo.video_code='".strip_tags($_REQUEST['sparevideo_options']['video_code'])."'";
 	
 	$pageposts = $wpdb->get_results($querystr, OBJECT);		 
-     
+    $current_user         =  wp_get_current_user();	
+												  
+	$queryforuseronly = trim($current_user->roles[0])=='administrator'?'':'user_id='.$current_user->ID;
+	$queryforuseronlyAND = trim($current_user->roles[0])=='administrator'?'':' AND';
 	 
     if(  isset($_REQUEST['save_settings']) &&  $_REQUEST['save_settings']!='' ){
-	 
+		
+	  check_admin_referer( 'save_settings');
 	  global $wpdb;			      
 	  
-	  $wpdb->query("UPDATE wp_sparevideo SET video_settings ='".serialize(strip_tags($_REQUEST['sparevideo_options']))."' WHERE id=".strip_tags($_REQUEST['sparevideo_options']['video_id']));			 
+	  $wpdb->query("UPDATE wp_sparevideo SET video_settings ='".serialize(strip_tags($_REQUEST['sparevideo_options']))."' WHERE ".$queryforuseronly.$queryforuseronlyAND." id=".strip_tags($_REQUEST['sparevideo_options']['video_id']));			 
 	
 	  ?>
 	  <script type="text/javascript">	
@@ -166,7 +171,8 @@ function svidf_custom_media_upload_tab_content() {
 							 action: 'load_videos',
                              post_id: <?php echo strip_tags($_REQUEST['post_id']); ?>,
                              show_media: '<?php echo strip_tags($_REQUEST['media_view']); ?>',
-                             paged: <?php echo strip_tags($_REQUEST['paged']); ?>							 
+                             paged: <?php echo strip_tags($_REQUEST['paged']); ?>,
+				 			 _wpnonce: '<?php echo wp_create_nonce( 'load_videos_'.$_REQUEST['post_id'] ); ?>'
                             };
 							
 			$('#media_lib').html('<p style="display:table; vertical-align:middle; text-align:center;    min-width: 100%; margin:20% 0px 0px 0px;"><img src="<?php echo admin_url();?>/images/loading.gif" style="width:20px;"></p>');
@@ -244,7 +250,8 @@ function svidf_custom_media_upload_tab_content() {
 				var get_remote_url = $('#remote_url').val();
 				
 				var data = {
-							action: 'video_init',						
+							action: 'video_init',
+							_wpnonce: '<?php echo wp_create_nonce( 'video_init_'.$_REQUEST['post_id'] ); ?>'
                 };
 				
 				$('#upload_form').hide();
@@ -262,7 +269,7 @@ function svidf_custom_media_upload_tab_content() {
                             
 						    var data = {
 							 action: 'video_upload',
-							 post_id : '<?php echo strip_tags($_REQUEST['post_id']); ?>',
+							 post_id : '<?php echo intval($_REQUEST['post_id']); ?>',
                              remote_url: get_remote_url,
 							 ref:jq_json_obj.ref,
 							 server:jq_json_obj.server,
@@ -321,7 +328,8 @@ function svidf_custom_media_upload_tab_content() {
 									  action: 'video_conversion',
 									  file_code : data.code,	
                                       post_id : '<?php echo strip_tags($_REQUEST['post_id']); ?>',
-									  local_upload: 'yes'
+									  local_upload: 'yes',
+									  _wpnonce: '<?php echo wp_create_nonce( 'video_conversion_'.$_REQUEST['post_id'] ); ?>'
 									};	
                                      
 									// Video Conversion for local file upload 
@@ -403,6 +411,7 @@ function svidf_custom_media_upload_tab_content() {
 									  action: 'video_conversion',
 									  file_code : status_upd,	
                                       post_id : '<?php echo strip_tags($_REQUEST['post_id']); ?>',
+									  _wpnonce: '<?php echo wp_create_nonce( 'video_conversion_'.$_REQUEST['post_id'] ); ?>'
 									};	
                                      
 									 
@@ -483,7 +492,7 @@ function svidf_sparevideo_menu() {
      remove_menu_page( 'upload.php' );
 	}
 	 
-	if( trim($current_user->roles[0])=='administrator')
+	if( current_user_can('administrator'))
 	{		     
 		//Main
 		add_menu_page('SpareVideos', 'SpareVideos', 'manage_options', 'spare_videos', 'svidf_sparevideos_options',SVID_PLUGIN_DIR.'/assets/images/video_icon.png',25 );
@@ -491,7 +500,7 @@ function svidf_sparevideo_menu() {
 		add_submenu_page('spare_videos', 'Manage Videos', 'Manage Videos', 'manage_options', 'manage-videos','svidf_manage_videos' );
 		
 	} 
-	else if( @in_array(trim($current_user->roles[0]),$options['who_can_use'])){
+	else if( array_intersect($options['who_can_use'], $current_user->roles)){
 		
 		add_menu_page('SpareVideos', 'SpareVideos', 'read', 'spare_videos', 'svidf_manage_videos',SVID_PLUGIN_DIR.'/assets/images/video_icon.png',25 );				
 		add_submenu_page('spare_videos', 'Manage Videos', 'Manage Videos', 'read', 'manage-videos','svidf_manage_videos' );		
@@ -543,7 +552,13 @@ function svidf_manage_videos(){
 	    foreach(strip_tags($_REQUEST['video_codes']) as $video_code){
 		  
 		  $querystr = "SELECT  * FROM wp_sparevideo WHERE video_code='".$video_code."'";		  
-		  $pageposts = $wpdb->get_results($querystr, OBJECT);		  
+		  $pageposts = $wpdb->get_results($querystr, OBJECT);	
+		  
+			$current_user         =  wp_get_current_user();	
+		
+			$queryforuseronly = trim($current_user->roles[0])=='administrator'?'':'user_id='.$current_user->ID;
+			$queryforuseronlyAND = trim($current_user->roles[0])=='administrator'?'':' AND';
+	 
 
 		  foreach($pageposts as $pagepost){
 			 
@@ -554,7 +569,7 @@ function svidf_manage_videos(){
 			  } 
 			  
 			}
-			$querystr = "DELETE from wp_sparevideo where id=".$pagepost->id;$wpdb->get_results($querystr, OBJECT);	     
+			$querystr = "DELETE from wp_sparevideo where ".$queryforuseronly.$queryforuseronlyAND." id=".$pagepost->id;$wpdb->get_results($querystr, OBJECT);	     
 			
 		  }	
 			
@@ -773,7 +788,7 @@ function svidf_RemoveAddMediaButtonsForNonAdmins(){
 	 echo '<style type="text/css">#toplevel_page_spare_videos .wp-first-item{ display:none;}</style>';
 	}
 
-	if( @in_array(trim($current_user->roles[0]),$options['who_can_use']) || trim($current_user->roles[0])=='administrator'){		
+	if( array_intersect($options['who_can_use'], $current_user->roles) || current_user_can('administrator')){		
 	   add_action( 'media_buttons', 'media_buttons' );	
 	   echo '<style type="text/css">.sparevideo_button.add_media{display:inline-block !important; visibility:hidden;}</style>';	   
 	} else {		
@@ -781,7 +796,7 @@ function svidf_RemoveAddMediaButtonsForNonAdmins(){
 		echo '<style type="text/css">body .sparevideo_button.add_media{display:none !important;}</style>';		
 	}
 	
-	if( @!in_array(trim($current_user->roles[0]),$options['who_can_use']) && !empty($current_user->allcaps['level_2']) && trim($current_user->roles[0])!='administrator'){		
+	if( @!array_intersect($options['who_can_use'], $current_user->roles) && !empty($current_user->allcaps['level_2']) && trim($current_user->roles[0])!='administrator'){		
 	   add_action( 'media_buttons', 'media_buttons' );	
 	   echo '<style type="text/css">body .sparevideo_button.add_media{display:none !important;}</style>';
 	}
@@ -1166,7 +1181,7 @@ class SpareVideo{
 		if (isset($response['status']) && $response['status']=='success'){
 			return $response['code'];
 		} 
-		//return $response;
+		return '';
 
     }	
 
@@ -1272,13 +1287,15 @@ function svidf_sparevideo_ajax_video_upload() {
 	 $uploadinit   =  json_decode($uploadinit, true);
 	
 	
-	if($uploadinit['code']!=''){
-          $user         =  wp_get_current_user();	 
+	if($uploadinit['code']!='' && ctype_alnum($_POST['post_id'])){
+		
+		  check_admin_referer( 'video_conversion_'.$_POST['post_id'] );
+          $current_user         =  wp_get_current_user();	 
 		  //$video_thumb = json_decode($spareVideo->VideoGetthumb($uploadinit['code'])); 	
           $current_date = date('Y/m/d');
 		  
 		  global $wpdb;
-          $wpdb->insert('wp_sparevideo',array('post_id'=> strip_tags($_POST['post_id']),'user_id'=> $user->ID,'video_code'=>$uploadinit['code'],'date'=>$current_date),array('%s','%s','%s','%s'));
+          $wpdb->insert('wp_sparevideo',array('post_id'=> $_POST['post_id'],'user_id'=> $current_user->ID,'video_code'=>$uploadinit['code'],'date'=>$current_date),array('%s','%s','%s','%s'));
 	 }	
 	if($uploadinit['error']!='')
 	echo 'error-'.$uploadinit['error'];
@@ -1325,18 +1342,19 @@ add_action('wp_ajax_upload_progress', 'svidf_sparevideo_ajax_upload_progress');
 function svidf_sparevideo_ajax_video_conversion() {
 	
      $spareVideo   =  new SpareVideo();	   
-	 $request      =  $spareVideo->UploadPost(strip_tags($_POST['file_code']));	 
+	 $request      =  $spareVideo->UploadPost($_POST['file_code']);	 
 
-	 if($request!='' && strip_tags($_POST['local_upload'])=='yes'){
+	 if($request!='' && $_POST['local_upload']=='yes' && ctype_alnum($_POST['post_id'])){
 		 		 
-          
-		 $user         =  wp_get_current_user();	 
+		 check_admin_referer( 'video_conversion_'.$_POST['post_id'] );
+		 
+		 $current_user         =  wp_get_current_user();	 
 		  
          $current_date = date('Y/m/d');
          
 		 global $wpdb;
          
-		 $wpdb->insert('wp_sparevideo',array('post_id'=> strip_tags($_POST['post_id']),'user_id'=> $user->ID,'video_code'=>strip_tags($_POST['file_code']),'date'=>$current_date),array('%s','%s','%s','%s'));                
+		 $wpdb->insert('wp_sparevideo',array('post_id'=> $_POST['post_id'],'user_id'=> $current_user->ID,'video_code'=>strip_tags($_POST['file_code']),'date'=>$current_date),array('%s','%s','%s','%s'));                
 
 			   
 	 }	
@@ -1455,7 +1473,8 @@ function svidf_sparevideo_ajax_load_videos($all=null){
 		$('.media_lib1').click(function(){
 			 var data11 = {
 							 action: 'load_videos',
-                             post_id: <?php echo strip_tags($_REQUEST['post_id']); ?>							
+                             post_id: <?php echo strip_tags($_REQUEST['post_id']); ?>	,
+				 			 _wpnonce: '<?php echo wp_create_nonce( 'load_videos_'.$_REQUEST['post_id'] ); ?>'
                             };
 			$('#media_lib').html('<p style="display:table; vertical-align:middle; text-align:center;    min-width: 100%; margin:20% 0px 0px 0px;"><img src="<?php echo admin_url();?>/images/loading.gif" style="width:20px;"></p>');
 		   $.ajax({  
@@ -1476,7 +1495,8 @@ function svidf_sparevideo_ajax_load_videos($all=null){
 							 action: 'load_videos',
 							 paged: $(this).attr('paged_no'),
                              post_id: <?php echo strip_tags($_REQUEST['post_id']); ?>,
-                             show_media: '<?php echo strip_tags($_REQUEST['show_media']); ?>',							 
+                             show_media: '<?php echo strip_tags($_REQUEST['show_media']); ?>',	
+				 			 _wpnonce: '<?php echo wp_create_nonce( 'load_videos_'.$_REQUEST['post_id'] ); ?>'
                             };
 			
 			$('#media_lib').html('<p style="display:table; vertical-align:middle; text-align:center;    min-width: 100%; margin:20% 0px 0px 0px;"><img src="<?php echo admin_url();?>/images/loading.gif" style="width:20px;"></p>');
@@ -1549,6 +1569,7 @@ function svidf_sparevideo_ajax_load_videos($all=null){
 							 action: 'load_videos',                       
 							 show_media: 'post_media',
 							 post_id: '<?php echo strip_tags($_REQUEST['post_id']); ?>',
+					 		_wpnonce: '<?php echo wp_create_nonce( 'load_videos_'.$_REQUEST['post_id'] ); ?>'
                      };
 				
 			}	
@@ -1855,6 +1876,7 @@ function svidf_sparevideo_ajax_load_videos($all=null){
 				   <input type="submit" name="save_settings" value="<?php _e('Save Your Settings') ?>" class=" button-primary"/>&nbsp;&nbsp;&nbsp;
                    
 				      <?php
+					  wp_nonce_field( 'save_settings' );
                       $check_video_setup = get_post_meta( strip_tags($_REQUEST['post_id']), 'video_page_'.strip_tags($_REQUEST['post_id']), true );			   
 					  					  
 					  
