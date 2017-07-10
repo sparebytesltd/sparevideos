@@ -37,8 +37,8 @@ function svidf_olab_tab_iframe() {
 	}
 
     
-    wp_enqueue_style('sparevideos-css',plugins_url('/sparevideos-css.css',__FILE__));      
-    wp_enqueue_script('sparevideos-js-print', plugins_url('/sparevideos-css.css',__FILE__), array('jquery', 'farbtastic'));
+	wp_enqueue_style('sparevideos-css',plugins_url('/sparevideos-css.css',__FILE__));  	
+	wp_enqueue_script('sparevideos-js-print', plugins_url('/assets/sparevideos-js.js',__FILE__), array('jquery', 'farbtastic'));
 	wp_enqueue_script('sparevideos-js-carou', plugins_url('/assets/jquery.carouFredSel-6.2.1.js',__FILE__), array('jquery'));
     @wp_iframe( 'svidf_custom_media_upload_tab_name' );
 }
@@ -83,7 +83,7 @@ function svidf_custom_media_upload_tab_content() {
 		$('.media_lib1').click(function(){
 			 var data11 = {
 							 action: 'load_videos',
-                             post_id: <?php echo strip_tags($_GET['post_id']); ?>,
+                             post_id: <?php echo intval($_GET['post_id']); ?>,
 				 			 _wpnonce: '<?php echo wp_create_nonce( 'load_videos_'.$_GET['post_id'] ); ?>'
                             };
 			$('#media_lib').html('<p style="display:table; vertical-align:middle; text-align:center;    min-width: 100%; margin:20% 0px 0px 0px;"><img src="<?php echo admin_url();?>/images/loading.gif" style="width:20px;"></p>');
@@ -169,7 +169,7 @@ function svidf_custom_media_upload_tab_content() {
 			 
 			 var data11 = {
 							 action: 'load_videos',
-                             post_id: <?php echo strip_tags($_REQUEST['post_id']); ?>,
+                             post_id: <?php echo intval($_REQUEST['post_id']); ?>,
                              show_media: '<?php echo strip_tags($_REQUEST['media_view']); ?>',
                              paged: <?php echo strip_tags($_REQUEST['paged']); ?>,
 				 			 _wpnonce: '<?php echo wp_create_nonce( 'load_videos_'.$_REQUEST['post_id'] ); ?>'
@@ -196,21 +196,21 @@ function svidf_custom_media_upload_tab_content() {
    // Setting as video page in the media library   
    else if( isset($_REQUEST['set_as_video_page']) &&  $_REQUEST['set_as_video_page']!='' ) {
 	   	   						
-		update_post_meta( strip_tags($_GET['post_id']), 'video_page_'.strip_tags($_GET['post_id']), strip_tags($_REQUEST['sparevideo_options']['video_code']));	
-		set_post_format(strip_tags($_GET['post_id']), 'video' );
+		update_post_meta( intval($_GET['post_id']), 'video_page_'.intval($_GET['post_id']), strip_tags($_REQUEST['sparevideo_options']['video_code']));	
+		set_post_format(intval($_GET['post_id']), 'video' );
         echo '<script type="text/javascript">	  	
 	    jQuery(document).ready( function($) { 
-		parent.jQuery(".media-modal-close").click(); window.top.location.href="'.get_admin_url().'/post.php?post='.strip_tags($_GET['post_id']).'&action=edit" });</script>';
+		parent.jQuery(".media-modal-close").click(); window.top.location.href="'.get_admin_url().'/post.php?post='.intval($_GET['post_id']).'&action=edit" });</script>';
    }
    
    // Removing as video page from the media library   
    else if( isset($_REQUEST['remove_video_page']) &&  $_REQUEST['remove_video_page']!='' ){
 	   	    
-		update_post_meta( strip_tags($_GET['post_id']), 'video_page_'.strip_tags($_GET['post_id']), 0 );	
-		set_post_format(strip_tags($_GET['post_id']), 0 );
+		update_post_meta( intval($_GET['post_id']), 'video_page_'.intval($_GET['post_id']), 0 );	
+		set_post_format(intval($_GET['post_id']), 0 );
 		 echo '<script type="text/javascript">	  	
 	    jQuery(document).ready( function($) { 
-		parent.jQuery(".media-modal-close").click();window.top.location.href="'.get_admin_url().'/post.php?post='.strip_tags($_GET['post_id']).'&action=edit" });</script>';
+		parent.jQuery(".media-modal-close").click();window.top.location.href="'.get_admin_url().'/post.php?post='.intval($_GET['post_id']).'&action=edit" });</script>';
    }
   
 ?>
@@ -327,7 +327,7 @@ function svidf_custom_media_upload_tab_content() {
 									 var data_conversion = {
 									  action: 'video_conversion',
 									  file_code : data.code,	
-                                      post_id : '<?php echo strip_tags($_REQUEST['post_id']); ?>',
+                                      post_id : '<?php echo intval($_REQUEST['post_id']); ?>',
 									  local_upload: 'yes',
 									  _wpnonce: '<?php echo wp_create_nonce( 'video_conversion_'.$_REQUEST['post_id'] ); ?>'
 									};	
@@ -410,7 +410,7 @@ function svidf_custom_media_upload_tab_content() {
 								    var data_conversion = {
 									  action: 'video_conversion',
 									  file_code : status_upd,	
-                                      post_id : '<?php echo strip_tags($_REQUEST['post_id']); ?>',
+                                      post_id : '<?php echo intval($_REQUEST['post_id']); ?>',
 									  _wpnonce: '<?php echo wp_create_nonce( 'video_conversion_'.$_REQUEST['post_id'] ); ?>'
 									};	
                                      
@@ -819,8 +819,9 @@ function svidf_sparevideos_admin_init() {
 	
     register_setting( 'sparevideo_options', 'sparevideo_options' );  
 	
-	wp_deregister_script('jquery');
-    wp_register_script('jquery', 'https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js', false, '1.4.4');
+	// wp_deregister_script('jquery');
+    // wp_register_script('jquery', 'https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js', false, '1.4.4');
+	// wp_enqueue_script( "jquery", plugin_dir_url( __FILE__ ) . '/assets/jquery1.4.4.min.js'); 
 	
 	// load our jquery file that sends the $.post request
 	wp_enqueue_script( "ajax-test", plugin_dir_url( __FILE__ ) . '/assets/ajax_call.js', array( 'jquery' ) ); 
@@ -839,7 +840,7 @@ function svidf_sparevideos_admin_init() {
 	
 	 
 	if( isset($_REQUEST['remove_featured_image']) &&  $_REQUEST['remove_featured_image']!=''  ){
-	   update_post_meta( strip_tags($_GET['post']), '_thumbnail_ext_url', '' );	   	  
+	   update_post_meta( intval($_GET['post']), '_thumbnail_ext_url', '' );	   	  
    } 
 	 
 }
@@ -1053,41 +1054,46 @@ class SpareVideo{
 	// method 0 = GET, 1 = POST, 2 = PUT, 3 = DELETE
 	public function mycURL ($location, $fields, $method=0) {
 		
-		$ch = curl_init();
+		// when method is GET or POST we use WP provided HTTP API functions while 
+		// for PUT and DELETE we initiate and use the PHP cURL functions
+		// we then retrieve the response body
 		
-		if ($method==0){
-		$location=$location.'?'.$fields;
+		if ($method==0) {
+			$response = wp_remote_retrieve_body(wp_remote_get( $location.'?'.$fields ));
+		} elseif ($method==1) {
+			$args = ['body' => $fields];
+			$response = wp_remote_retrieve_body(wp_remote_post( $location, $args ));
+		} else {
+			$ch = curl_init();
+
+			curl_setopt($ch, CURLOPT_URL,$location);
+			curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+			
+			if ($method==2){
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+			} elseif ($method==3){
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+			}
+
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT ,5); 
+			curl_setopt($ch, CURLOPT_TIMEOUT, 10); //timeout in seconds	
+
+			$response = curl_exec ($ch);
+
+
+			if ($errno = curl_errno($ch)) {
+				 $errno;
+			}
+
+			curl_close ($ch);
 		}
 
-		curl_setopt($ch, CURLOPT_URL,$location);
-		curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 		
-		if ($method==1){
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
-		} elseif ($method==2){
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-		} elseif ($method==3){
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
-		}
-		
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-		
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT ,5); 
-		curl_setopt($ch, CURLOPT_TIMEOUT, 10); //timeout in seconds	
-			
-		$server_output = curl_exec ($ch);
-		
-		
-		if ($errno = curl_errno($ch)) {
-			 $errno;
-		}
-		
-		curl_close ($ch);
-		
-		return $server_output;		
+		return $response;		
 	}
 	
 	public function thumb_url ($video,$size,$action){
@@ -1295,7 +1301,7 @@ function svidf_sparevideo_ajax_video_upload() {
           $current_date = date('Y/m/d');
 		  
 		  global $wpdb;
-          $wpdb->insert('wp_sparevideo',array('post_id'=> $_POST['post_id'],'user_id'=> $current_user->ID,'video_code'=>$uploadinit['code'],'date'=>$current_date),array('%s','%s','%s','%s'));
+          $wpdb->insert('wp_sparevideo',array('post_id'=> intval($_POST['post_id']),'user_id'=> $current_user->ID,'video_code'=>$uploadinit['code'],'date'=>$current_date),array('%s','%s','%s','%s'));
 	 }	
 	if($uploadinit['error']!='')
 	echo 'error-'.$uploadinit['error'];
@@ -1354,7 +1360,7 @@ function svidf_sparevideo_ajax_video_conversion() {
          
 		 global $wpdb;
          
-		 $wpdb->insert('wp_sparevideo',array('post_id'=> $_POST['post_id'],'user_id'=> $current_user->ID,'video_code'=>strip_tags($_POST['file_code']),'date'=>$current_date),array('%s','%s','%s','%s'));                
+		 $wpdb->insert('wp_sparevideo',array('post_id'=> intval($_POST['post_id']),'user_id'=> $current_user->ID,'video_code'=>strip_tags($_POST['file_code']),'date'=>$current_date),array('%s','%s','%s','%s'));                
 
 			   
 	 }	
@@ -1399,6 +1405,7 @@ register_activation_hook(__FILE__,'svidf_sparevideo_options_install');
 
 
 function svidf_sparevideo_ajax_load_videos($all=null){
+
 ?>
 <script type='text/javascript' src='<?php echo plugins_url('/assets/sparevideos-js.js',__FILE__); ?>'></script>
 <script type='text/javascript'>
@@ -1473,7 +1480,7 @@ function svidf_sparevideo_ajax_load_videos($all=null){
 		$('.media_lib1').click(function(){
 			 var data11 = {
 							 action: 'load_videos',
-                             post_id: <?php echo strip_tags($_REQUEST['post_id']); ?>	,
+                             post_id: <?php echo intval($_REQUEST['post_id']); ?>	,
 				 			 _wpnonce: '<?php echo wp_create_nonce( 'load_videos_'.$_REQUEST['post_id'] ); ?>'
                             };
 			$('#media_lib').html('<p style="display:table; vertical-align:middle; text-align:center;    min-width: 100%; margin:20% 0px 0px 0px;"><img src="<?php echo admin_url();?>/images/loading.gif" style="width:20px;"></p>');
@@ -1494,7 +1501,7 @@ function svidf_sparevideo_ajax_load_videos($all=null){
 			 var data11 = {
 							 action: 'load_videos',
 							 paged: $(this).attr('paged_no'),
-                             post_id: <?php echo strip_tags($_REQUEST['post_id']); ?>,
+                             post_id: <?php echo intval($_REQUEST['post_id']); ?>,
                              show_media: '<?php echo strip_tags($_REQUEST['show_media']); ?>',	
 				 			 _wpnonce: '<?php echo wp_create_nonce( 'load_videos_'.$_REQUEST['post_id'] ); ?>'
                             };
@@ -1560,7 +1567,7 @@ function svidf_sparevideo_ajax_load_videos($all=null){
 			 var data_change = {
 							 action: 'load_videos',                       
 							 show_media: 'all',
-							 post_id: '<?php echo strip_tags($_REQUEST['post_id']); ?>',
+							 post_id: '<?php echo intval($_REQUEST['post_id']); ?>',
                             };
 			
             if( $(this).val() == 'post_media')	{
@@ -1568,7 +1575,7 @@ function svidf_sparevideo_ajax_load_videos($all=null){
 				 var data_change = {
 							 action: 'load_videos',                       
 							 show_media: 'post_media',
-							 post_id: '<?php echo strip_tags($_REQUEST['post_id']); ?>',
+							 post_id: '<?php echo intval($_REQUEST['post_id']); ?>',
 					 		_wpnonce: '<?php echo wp_create_nonce( 'load_videos_'.$_REQUEST['post_id'] ); ?>'
                      };
 				
@@ -1620,7 +1627,7 @@ function svidf_sparevideo_ajax_load_videos($all=null){
      
     if( strip_tags($_REQUEST['show_media'])=='' || (isset($_REQUEST['show_media']) && $_REQUEST['show_media']!='all') )	 {
 		
-		$querystr .= " WHERE post_id = ".strip_tags($_REQUEST['post_id']);
+		$querystr .= " WHERE post_id = ".intval($_REQUEST['post_id']);
 		if($current_user->roles[0]!='administrator')	 
 	    $querystr .= " AND user_id=".$current_user->ID;
 	
@@ -1640,7 +1647,7 @@ function svidf_sparevideo_ajax_load_videos($all=null){
 		
     
 	if( strip_tags($_REQUEST['show_media'])=='' || (isset($_REQUEST['show_media']) && $_REQUEST['show_media']!='all') )	 {
-		$add_cond = " WHERE post_id = ".strip_tags($_REQUEST['post_id']);
+		$add_cond = " WHERE post_id = ".intval($_REQUEST['post_id']);
 		if($current_user->roles[0]!='administrator')	 
 	    $add_cond .= " AND user_id=".$current_user->ID;
 	
@@ -1877,10 +1884,10 @@ function svidf_sparevideo_ajax_load_videos($all=null){
                    
 				      <?php
 					  wp_nonce_field( 'save_settings' );
-                      $check_video_setup = get_post_meta( strip_tags($_REQUEST['post_id']), 'video_page_'.strip_tags($_REQUEST['post_id']), true );			   
+                      $check_video_setup = get_post_meta( intval($_REQUEST['post_id']), 'video_page_'.intval($_REQUEST['post_id']), true );			   
 					  					  
 					  
-					  if( $pagepost->post_id == strip_tags($_REQUEST['post_id']) ){
+					  if( $pagepost->post_id == intval($_REQUEST['post_id']) ){
 						  if($check_video_setup  == $pagepost->video_code){
 						  ?>
 						  <input type="submit" id="remove_video_page" value="Remove Video Page" name="remove_video_page" class="button-primary" style="margin-right:20px; margin-left:10px;"/>		
@@ -1964,16 +1971,16 @@ function svidf_thumbnail_url_field( $html ) {
   
     global $post;
 	
-	$vid_code   = get_post_meta( strip_tags($_GET['post']),'video_page_'.strip_tags($_GET['post']), TRUE);	
+	$vid_code   = get_post_meta( intval($_GET['post']),'video_page_'.intval($_GET['post']), TRUE);	
     $value      = SVID_THUMB_URL.'/'.$vid_code.'/'.SVID_THUMB_SIZE.'/default.jpg';
 	
 	
 	
-    //$nonce = wp_create_nonce( 'thumbnail_ext_url_' . strip_tags($_GET['post']) . get_current_blog_id() );
+    //$nonce = wp_create_nonce( 'thumbnail_ext_url_' . intval($_GET['post']) . get_current_blog_id() );
 	
     if ( $vid_code!=0) {  	 
       $html = '<div>';
-      $html .= '<p><img style="width:100%;height:auto;" src="'. esc_url($value) . '"></p><a href="'.get_edit_post_link(strip_tags($_GET['post'])).'&remove_featured_image=1">Remove image</a>';
+      $html .= '<p><img style="width:100%;height:auto;" src="'. esc_url($value) . '"></p><a href="'.get_edit_post_link(intval($_GET['post'])).'&remove_featured_image=1">Remove image</a>';
       $html .= '</div>';	 
     }
     
@@ -1998,8 +2005,8 @@ function svidf_thumbnail_external_replace( $html, $post_id ) {
 }
 
 if( isset($_REQUEST['remove_featured_image']) &&  $_REQUEST['remove_featured_image']!=''  ){
-	   update_post_meta( strip_tags($_GET['post']), '_thumbnail_ext_url', '' );
-	   update_post_meta( strip_tags($_GET['post']), 'video_page_'.strip_tags($_GET['post']),0 );	   
+	   update_post_meta( intval($_GET['post']), '_thumbnail_ext_url', '' );
+	   update_post_meta( intval($_GET['post']), 'video_page_'.intval($_GET['post']),0 );	   
 }
 
 // Media Library Pagination
